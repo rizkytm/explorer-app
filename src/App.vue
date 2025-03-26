@@ -2,6 +2,7 @@
 import { ref, onMounted } from 'vue';
 import axios from 'axios';
 import { Modal } from 'bootstrap';
+import TreeView from './components/TreeView.vue';
 
 // Types for TypeScript support
 interface Folder {
@@ -12,6 +13,12 @@ interface Folder {
   subfolders?: number;
 }
 
+interface TreeNode {
+  id: string;
+  subfolders?: TreeNode[];
+  name?: string;
+}
+
 // State management
 const rootFolders = ref<Folder[]>([]);
 const selectedFolder = ref<Folder | null>(null);
@@ -19,6 +26,32 @@ const subfolders = ref<Folder[]>([]);
 const isLoading = ref(false);
 const error = ref<string | null>(null);
 const API_URL = 'http://localhost:3000';
+
+const beverageData = [
+  {
+    label: 'Beverages',
+    children: [
+      { label: 'Water' },
+      { label: 'Coffee' },
+      {
+        label: 'Tea',
+        children: [
+          { label: 'Black Tea' },
+          { label: 'White Tea' },
+          {
+            label: 'Green Tea',
+            children: [
+              { label: 'Sencha' },
+              { label: 'Gyokuro' },
+              { label: 'Matcha' },
+              { label: 'Pi Lo Chun' },
+            ],
+          },
+        ],
+      },
+    ],
+  },
+];
 
 // Modal references
 const folderModal = ref<HTMLElement | null>(null);
@@ -52,6 +85,93 @@ async function selectFolder(folder: Folder) {
     );
     subfolders.value = response.data;
     selectFolderTree(selectedFolder);
+  } catch (err) {
+    error.value = 'Failed to load subfolders';
+    console.error(err);
+  } finally {
+    isLoading.value = false;
+  }
+}
+
+function findNodeById(root, targetId: string): TreeNode | null {
+  // if (root.parentId === null && )
+  console.log(root.value, targetId);
+  for (const child of root.value) {
+    console.log('child');
+    console.log(child);
+    const foundNode = findNodeById(child, targetId);
+    if (foundNode) {
+      return foundNode;
+    }
+  }
+  // If current node matches, return it
+  if (root.id === targetId) {
+    return root;
+  }
+
+  // If node has children, recursively search
+  if (root.subfolders) {
+    for (const child of root.subfolders) {
+      const foundNode = findNodeById(child, targetId);
+      if (foundNode) {
+        return foundNode;
+      }
+    }
+  }
+
+  // Node not found
+  return null;
+}
+
+function getNode(rootFolders, targetId) {
+  console.log('rootFolders');
+  console.log(rootFolders);
+  if (rootFolders.value) {
+    for (const child of rootFolders.value) {
+      if (child.id === targetId) {
+        return child;
+      }
+
+      if (child.subfolders) {
+        for (const subfolder of child.subfolders) {
+          const foundNode = getNode(subfolder, targetId);
+          if (foundNode) {
+            return foundNode;
+          }
+        }
+      }
+    }
+  }
+
+  return null;
+}
+
+// Method to fetch subfolder
+async function fetchSubfolder(id: string) {
+  try {
+    isLoading.value = true;
+    console.log(id);
+    const response = await axios.get(`${API_URL}/folders/${id}/tree`);
+    console.log(response.data);
+    const currentFolderIndex = rootFolders.value.findIndex(
+      (folder) => folder.id === id
+    );
+    const node = getNode(rootFolders, id);
+    console.log('node');
+    console.log(node);
+    if (node) {
+      node.subfolders = response.data.subfolders;
+    }
+    // if (currentFolderIndex != -1) {
+    //   rootFolders.value[currentFolderIndex].subfolders =
+    //     response.data.subfolders;
+    //   selectedFolder.value = rootFolders.value[currentFolderIndex];
+    //   subfolders.value = selectedFolder.value.subfolders;
+    // } else {
+    //   const result = findNodeById(rootFolders, id);
+    //   console.log('result');
+    //   console.log(result);
+    // }
   } catch (err) {
     error.value = 'Failed to load subfolders';
     console.error(err);
@@ -196,7 +316,15 @@ async function deleteFolder() {
           </button>
         </div>
 
-        <div class="list-group">
+        <div>
+          <!-- <h2>Beverage Tree</h2> -->
+          <tree-view
+            :items="rootFolders"
+            @fetch-subfolder="fetchSubfolder"
+          ></tree-view>
+        </div>
+
+        <div class="list-group" style="display: none">
           <button
             v-for="folder in rootFolders"
             :key="folder.id"
