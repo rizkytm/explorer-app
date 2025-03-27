@@ -6,6 +6,11 @@ Install Dependencies (if counter error, try use node v22)
 npm install
 ```
 
+Copy Environment Variables and change VITE_API_URL value
+```bash
+cp .env.example .env
+```
+
 ## Development
 To start the development server run:
 ```bash

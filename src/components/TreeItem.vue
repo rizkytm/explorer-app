@@ -70,7 +70,7 @@ const handleSelectedFolder = (value) => {
 // Method to fetch subfolder
 async function fetchSubfolder(id, parent = null) {
   try {
-    const API_URL = 'http://localhost:3000';
+    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
     const response = await axios.get(`${API_URL}/folders/${id}/subfolders`);
     parent.subfolders = response.data;
     emit('showSubfolder', response.data);

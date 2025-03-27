@@ -18,7 +18,7 @@ const selectedFolder = ref<Folder | null>(null);
 const subfolders = ref<Folder[]>([]);
 const isLoading = ref(false);
 const error = ref<string | null>(null);
-const API_URL = 'http://localhost:3000';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
 // Fetch root folders on component mount
 onMounted(async () => {
@@ -86,7 +86,7 @@ function setSelectedFolder(folder) {
             <h4 class="mb-0">Subfolders of {{ selectedFolder.name }}</h4>
           </div>
 
-          <div v-if="subfolders.length" class="list-group list-group-flush">
+          <div v-if="subfolders && subfolders.length > 0" class="list-group list-group-flush">
             <div
               v-for="subfolder in subfolders"
               :key="subfolder.id"
