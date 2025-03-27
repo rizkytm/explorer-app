@@ -4,7 +4,8 @@
       v-for="item in items"
       :key="item.id"
       :item="item"
-      @fetch-subfolder="handleEmit"
+      @show-subfolder="handleEmit"
+      @selected-folder="handleFolder"
     ></TreeItem>
   </ul>
 </template>
@@ -13,7 +14,7 @@
 import { defineProps } from 'vue';
 import TreeItem from './TreeItem.vue';
 
-const emit = defineEmits(['fetchSubfolder']);
+const emit = defineEmits(['fetchSubfolder', 'showSubfolder', 'selectedFolder']);
 
 const props = defineProps({
   items: {
@@ -22,8 +23,12 @@ const props = defineProps({
   },
 });
 
-const handleEmit = (itemId) => {
-  emit('fetchSubfolder', itemId);
+const handleEmit = (subfolder) => {
+  emit('showSubfolder', subfolder);
+};
+
+const handleFolder = (parent) => {
+  emit('selectedFolder', parent);
 };
 </script>
 

@@ -22,16 +22,19 @@
         v-for="child in item.subfolders"
         :key="child.label"
         :item="child"
-        @click="getSubfolder(child.id)"
+        @show-subfolder="handleShowSubfolder"
+        @selected-folder="handleSelectedFolder"
+        @click.stop="fetchSubfolder(child.id, child)"
       ></TreeItem>
     </ul>
   </li>
 </template>
 
 <script setup>
+import axios from 'axios';
 import { ref, computed, defineProps } from 'vue';
 
-const emit = defineEmits(['fetchSubfolder']);
+const emit = defineEmits(['fetchSubfolder', 'showSubfolder', 'selectedFolder']);
 
 const props = defineProps({
   item: {
@@ -49,16 +52,33 @@ const hasChildren = computed(() => {
 });
 
 const toggleExpand = () => {
-  //   getSubfolder();
-  emit('fetchSubfolder', props.item.id);
   if (hasChildren.value) {
     expanded.value = !expanded.value;
   }
+  fetchSubfolder(props.item.id, props.item)
+  emit('showSubfolder', props.item?.subfolders);
 };
 
-const getSubfolder = (childId) => {
-  emit('fetchSubfolder', childId);
-};
+const handleShowSubfolder = (value) => {
+  emit('showSubfolder', value);
+}
+
+const handleSelectedFolder = (value) => {
+  emit('selectedFolder', value);
+}
+
+// Method to fetch subfolder
+async function fetchSubfolder(id, parent = null) {
+  try {
+    const API_URL = 'http://localhost:3000';
+    const response = await axios.get(`${API_URL}/folders/${id}/subfolders`);
+    parent.subfolders = response.data;
+    emit('showSubfolder', response.data);
+    emit('selectedFolder', parent);
+  } catch (err) {
+    console.error(err);
+  }
+}
 </script>
 
 <style scoped>
