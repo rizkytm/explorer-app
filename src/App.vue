@@ -27,6 +27,7 @@ const isLoading = ref(false);
 const error = ref<string | null>(null);
 const API_URL = 'http://localhost:3000';
 
+// TODO: delete
 const beverageData = [
   {
     label: 'Beverages',
